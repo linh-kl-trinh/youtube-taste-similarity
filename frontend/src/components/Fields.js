@@ -43,18 +43,18 @@ const Fields = () => {
           value={field1}
           onChange={(e) => setField1(e.target.value)}
           className="input"
-          placeholder="Field 1"
+          placeholder="Playlist 1"
         />
         <input
           type="text"
           value={field2}
           onChange={(e) => setField2(e.target.value)}
           className="input"
-          placeholder="Field 2"
+          placeholder="Playlist 2"
         />
       </div>
       <button onClick={handleButtonClick} className="button">
-        Send Data
+        Compare
       </button>
     </div>
   );
