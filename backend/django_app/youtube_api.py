@@ -92,6 +92,10 @@ def process_playlist_items(youtube_service, playlist_items):
         category_info = get_category_info(youtube_service, video_id)
         channel_info = get_channel_info(youtube_service, channel_id)
 
+        title = title if title is not None else ""
+        channel_name = channel_name if channel_name is not None else ""
+        transcript = transcript if transcript is not None else ""
+
         words = " ".join([title,
                         channel_name,
                         description,
