@@ -12,6 +12,9 @@ def get_playlist_items(youtube_service, playlist_url):
     playlist_id = get_playlist_id(youtube_service=youtube_service, playlist_url=playlist_url)
     print("playlist id:", playlist_id)
 
+    if playlist_id is None:
+        return None
+
     playlist_items = []
     request = youtube_service.playlistItems().list(
         part='snippet,contentDetails',
@@ -33,7 +36,7 @@ def get_playlist_id(youtube_service, playlist_url):
     playlist_id = extract_playlist_id(playlist_url)
     if not playlist_id:
         print('Invalid or unsupported playlist URL format.')
-        return None 
+        return None
 
     # Call the playlists.list method to get playlist details
     request = youtube_service.playlists().list(
