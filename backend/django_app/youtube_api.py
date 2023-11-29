@@ -1,6 +1,4 @@
 # django_app/youtube_api.py
-import os
-import re
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 
@@ -95,6 +93,10 @@ def process_playlist_items(youtube_service, playlist_items):
         category_info = get_category_info(youtube_service, video_id)
         channel_info = get_channel_info(youtube_service, channel_id)
 
+        title = title if title is not None else ""
+        channel_name = channel_name if channel_name is not None else ""
+        transcript = transcript if transcript is not None else ""
+
         words = " ".join([title,
                         channel_name,
                         description,
@@ -103,8 +105,8 @@ def process_playlist_items(youtube_service, playlist_items):
                         catch(lambda: channel_info.get("description"))])
         playlist_words.append(words)
 
-        print()
-        print(title, channel_name)
+        # print()
+        # print(title, channel_name)
         # print(transcript)
         # print(playlist_words)
 
@@ -114,7 +116,7 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except TranscriptsDisabled:
-        print("No transcript available.")
+        # print("No transcript available.")
         return [{"text": ""}]
     except AttributeError:
         return ""
