@@ -31,20 +31,8 @@ def handle_frontend_data(request):
 
         youtube_service = get_authenticated_service('youtube', 'v3', api_key=settings.YOUTUBE_API_KEY)
         
-        playlist1_items = get_playlist_items(youtube_service, field1)
-        
-        if playlist1_items is None:
-            pass
-            # TODO: ask for input again
-
-        playlist2_items = get_playlist_items(youtube_service, field2)
-        
-        if playlist2_items is None:
-            pass
-            # TODO: ask for input again
-
-        playlist1_words = process_playlist_items(youtube_service, playlist1_items)
-        playlist2_words = process_playlist_items(youtube_service, playlist2_items)
+        playlist1_words = asyncio.run(get_playlist_words(youtube_service, field1))
+        playlist2_words = asyncio.run(get_playlist_words(youtube_service, field2))
 
         similarity_score = calculate_similarity(playlist1_words, playlist2_words)
 
