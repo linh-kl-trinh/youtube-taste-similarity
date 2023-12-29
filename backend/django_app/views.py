@@ -6,21 +6,13 @@ import json
 from .youtube_api import *
 from django.conf import settings
 from .similarity import *
-from .models import PlaylistSimilarity
 
 @csrf_exempt
 def handle_frontend_data(request):
-    if request.method == 'GET':
-        all_ps = PlaylistSimilarity.objects.all()
-        ps_data = [{'playlist1': ps.playlist1, 'field2': ps.playlist2, 'similarity': ps.similarity} for ps in all_ps]
-        return JsonResponse({'playlists': ps_data})
-
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         field1 = data.get('field1')
         field2 = data.get('field2')
-
-        ps = PlaylistSimilarity(playlist1=field1, playlist2=field2)
 
         print(field1, field2)
 
@@ -34,10 +26,7 @@ def handle_frontend_data(request):
         playlist1_words = asyncio.run(get_playlist_words(youtube_service, field1))
         playlist2_words = asyncio.run(get_playlist_words(youtube_service, field2))
 
-        similarity_score = calculate_similarity(playlist1_words, playlist2_words)
-
-        ps.similarity = similarity_score
-        ps.save()
+        similarity_score = asyncio.run(calculate_similarity(playlist1_words, playlist2_words))
 
         print(similarity_score)
 

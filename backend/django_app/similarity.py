@@ -1,22 +1,25 @@
-import spacy
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import random
 
-def tokenize(words):
-    nlp = spacy.load("en_core_web_md")
-    tokens = [token.text for word in words for token in nlp(word)]
-    return tokens
+# Calculate the similarity between two playlists
+async def calculate_similarity(playlist_words1, playlist_words2):
+    # Combine the words into two strings
+    playlist_text1 = " ".join(playlist_words1)
+    playlist_text2 = " ".join(playlist_words2)
 
-def calculate_similarity(words1, words2):
-    tokens1 = tokenize(words1)
-    tokens2 = tokenize(words2)
+    # Create a TF-IDF vectorizer
+    vectorizer = TfidfVectorizer()
 
-    vec1 = spacy.load("en_core_web_md")(" ".join(tokens1)).vector
-    vec2 = spacy.load("en_core_web_md")(" ".join(tokens2)).vector
+    # Fit and transform the vectorizer on the playlist texts
+    tfidf_matrix = vectorizer.fit_transform([playlist_text1, playlist_text2])
 
-    similarity_score = cosine_similarity(vec1.reshape(1, -1), vec2.reshape(1, -1))[0][0]
+    # Calculate the cosine similarity between the playlists
+    similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-    return similarity_score
+    # The similarity value is in the top-right corner of the matrix
+    playlist_similarity = similarity_matrix[0, 1]
+    
+    return playlist_similarity
 
 if __name__ == '__main__':
     word_list1 = ['python', 'giraffe', 'ocean', 'umbrella', 'candle', 'keyboard', 'mountain', 'jazz', 'compass', 'telescope']
@@ -80,6 +83,5 @@ if __name__ == '__main__':
     random.shuffle(merged_list1)
     random.shuffle(merged_list2)
 
-    # similarity_score = calculate_similarity(merged_list1, merged_list2)
-    similarity_score = calculate_similarity(word_list1, word_list3)
+    similarity_score = calculate_similarity(merged_list1, merged_list2)
     print(f"Similarity Score: {similarity_score}")
