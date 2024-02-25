@@ -34,7 +34,21 @@ async def get_playlist_words(youtube_service, playlist_url):
         playlist_items, next_page_token = await get_playlist_items(youtube_service, playlist_id, next_page_token)
         tasks.extend([process_playlist_items(youtube_service, item) for item in playlist_items])
 
-    playlist_words = await asyncio.gather(*tasks)
+    # Categorize words into video_info, category_info, and channel_info
+    video_info_words = []
+    category_info_words = []
+    channel_info_words = []
+
+    for result in await asyncio.gather(*tasks):
+        video_info_words.append(result["video_info"])
+        category_info_words.append(result["category_info"])
+        channel_info_words.append(result["channel_info"])
+
+    playlist_words = {
+        "video_info": " ".join(video_info_words),
+        "category_info": " ".join(category_info_words),
+        "channel_info": " ".join(channel_info_words)
+    }
 
     return playlist_words
 
@@ -53,7 +67,7 @@ def get_playlist_id(youtube_service, playlist_url):
         fields='items/id',
         id=playlist_id
     )
-
+    
     try:
         response = request.execute()
         if 'items' in response and response['items']:
@@ -102,28 +116,26 @@ async def process_playlist_items(youtube_service, item):
     channel_id = snippet.get("videoOwnerChannelId")
     description = snippet.get("description")
 
-    # https://pypi.org/project/youtube-transcript-api/#api
-    # transcript language defaults to english
-    # transcript = await get_transcript(video_id)
-
     category_info = await get_category_info(youtube_service, video_id)
     channel_info = await get_channel_info(youtube_service, channel_id)
 
     title = title if title is not None else ""
     channel_name = channel_name if channel_name is not None else ""
-    # transcript = transcript if transcript is not None else ""
+    description = description if description is not None else ""
 
-    words = " ".join([title,
-                    channel_name,
-                    description,
-                    # transcript,
-                    catch(lambda: category_info.get("name")),
-                    catch(lambda: channel_info.get("description"))])
+    video_info = " ".join([title, description])
 
-    # print()
-    # print(title, channel_name)
-    # print(transcript)
-    # print(playlist_words)
+    category_name = catch(lambda: category_info.get("name"))
+    channel_description = catch(lambda: channel_info.get("description"))
+
+    category_info_words = f"Category: {category_name}"
+    channel_info_words = f"Channel: {channel_name}, {channel_description}"
+
+    words = {
+        "video_info": video_info,
+        "category_info": category_info_words,
+        "channel_info": channel_info_words
+    }
 
     return words
 
@@ -134,21 +146,24 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
         return ""
 
 async def get_channel_info(youtube_service, channel_id):
-    channel_request = youtube_service.channels().list(
-        part='snippet',
-        id=channel_id
-    )
+    if channel_id:
+        channel_request = youtube_service.channels().list(
+            part='snippet',
+            id=channel_id
+        )
 
-    try:
-        response = channel_request.execute()
-        channel_description = response.get("items")[0].get("snippet").get("description")
-    except Exception as e:
-        print(f"Error: {e}")
+        try:
+            response = channel_request.execute()
+            channel_description = response.get("items")[0].get("snippet").get("description")
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
+        # print(channel_description)
+
+        return {"description": channel_description}
+    else:
         return None
-
-    # print(channel_description)
-
-    return {"description": channel_description}
 
 async def get_category_info(youtube_service, video_id):
     # Make the API request to get video details
@@ -165,7 +180,9 @@ async def get_category_info(youtube_service, video_id):
             part='snippet',
             id=category_id
         )
+
         response = category_request.execute()
+        
         category_name = response.get("items")[0].get("snippet").get("title")
 
         # print(category_name)

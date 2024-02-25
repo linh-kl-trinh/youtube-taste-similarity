@@ -26,7 +26,7 @@ def handle_frontend_data(request):
         playlist1_words = asyncio.run(get_playlist_words(youtube_service, field1))
         playlist2_words = asyncio.run(get_playlist_words(youtube_service, field2))
 
-        similarity_score = asyncio.run(calculate_similarity(playlist1_words, playlist2_words))
+        similarity_score = calculate_similarity(playlist1_words, playlist2_words)
 
         print(similarity_score)
 
