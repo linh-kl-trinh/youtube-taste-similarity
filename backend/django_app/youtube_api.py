@@ -104,19 +104,19 @@ async def process_playlist_items(youtube_service, item):
 
     # https://pypi.org/project/youtube-transcript-api/#api
     # transcript language defaults to english
-    transcript = await get_transcript(video_id)
+    # transcript = await get_transcript(video_id)
 
     category_info = await get_category_info(youtube_service, video_id)
     channel_info = await get_channel_info(youtube_service, channel_id)
 
     title = title if title is not None else ""
     channel_name = channel_name if channel_name is not None else ""
-    transcript = transcript if transcript is not None else ""
+    # transcript = transcript if transcript is not None else ""
 
     words = " ".join([title,
                     channel_name,
                     description,
-                    transcript,
+                    # transcript,
                     catch(lambda: category_info.get("name")),
                     catch(lambda: channel_info.get("description"))])
 
