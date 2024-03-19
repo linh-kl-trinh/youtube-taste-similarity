@@ -1,0 +1,6 @@
+django
+django-cors-headers
+google-api-python-client
+youtube_transcript_api
+cohere
+scikit-learn
