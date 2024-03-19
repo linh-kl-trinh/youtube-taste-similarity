@@ -134,3 +134,4 @@ with open(os.path.join(BASE_DIR, 'config.json')) as config_file:
     config = json.load(config_file)
 
 YOUTUBE_API_KEY = config.get('youtube_api_key', '')
+COHERE_API_KEY = config.get('cohere_api_key', '')

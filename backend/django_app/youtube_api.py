@@ -2,6 +2,8 @@
 import asyncio
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
+import cohere
+from django.conf import settings
 
 def get_authenticated_service(api_name, api_version, api_key):
     youtube_service = build(api_name, api_version, developerKey=api_key)
@@ -38,16 +40,19 @@ async def get_playlist_words(youtube_service, playlist_url):
     video_info_words = []
     category_info_words = []
     channel_info_words = []
+    transcript_words = []
 
     for result in await asyncio.gather(*tasks):
         video_info_words.append(result["video_info"])
         category_info_words.append(result["category_info"])
         channel_info_words.append(result["channel_info"])
+        transcript_words.append(result["transcript"])
 
     playlist_words = {
         "video_info": " ".join(video_info_words),
         "category_info": " ".join(category_info_words),
-        "channel_info": " ".join(channel_info_words)
+        "channel_info": " ".join(channel_info_words),
+        "transcript" : " ".join(transcript_words)
     }
 
     return playlist_words
@@ -99,12 +104,26 @@ def extract_playlist_id(url):
 
     return playlist_id
 
-async def get_transcript(video_id):
+async def get_transcript_summary(video_id):
     try:
         transcript = await asyncio.to_thread(YouTubeTranscriptApi.get_transcript, video_id)
-        return " ".join([chunk.get("text") for chunk in transcript]).replace("\n", " ")
-    except TranscriptsDisabled:
-        # print("No transcript available.")
+        text = " ".join([chunk.get("text") for chunk in transcript]).replace("\n", " ")
+
+        if len(text) < 250:
+            return None
+
+        co = cohere.Client(settings.COHERE_API_KEY)
+    
+        # summarize transcript using Cohere
+        response = co.summarize(
+            text=text
+        )
+
+        print(response.summary)
+
+        return response.summary
+    except Exception:
+        print("No transcript available.")
         return ""
 
 async def process_playlist_items(youtube_service, item):
@@ -131,10 +150,13 @@ async def process_playlist_items(youtube_service, item):
     category_info_words = f"Category: {category_name}"
     channel_info_words = f"Channel: {channel_name}, {channel_description}"
 
+    transcript_words = await get_transcript_summary(video_id)
+
     words = {
         "video_info": video_info,
         "category_info": category_info_words,
-        "channel_info": channel_info_words
+        "channel_info": channel_info_words,
+        "transcript": transcript_words
     }
 
     return words
