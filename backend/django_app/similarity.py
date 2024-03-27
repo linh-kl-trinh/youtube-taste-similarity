@@ -16,11 +16,9 @@ def calculate_similarity(playlist1_words, playlist2_words):
     vectorizer = CountVectorizer()
 
     # Concatenate words from each category
-    playlist1_text = playlist1_words["category_info"] * 3 + playlist1_words["channel_info"] * 2 + playlist1_words["video_info"]
-    playlist2_text = playlist2_words["category_info"] * 3 + playlist2_words["channel_info"] * 2 + playlist2_words["video_info"]
-
-    print(playlist1_words["category_info"])
-    print(playlist2_words["category_info"])
+    playlist1_text = playlist1_words["category_info"] * 3 + playlist1_words["channel_info"] * 2 + playlist1_words["video_info"] + playlist1_words["transcript"]
+    playlist2_text = playlist2_words["category_info"] * 3 + playlist2_words["channel_info"] * 2 + playlist2_words["video_info"] + playlist2_words["transcript"]
+    
     # Fit and transform the playlists
     X = vectorizer.fit_transform([playlist1_text, playlist2_text])
 
