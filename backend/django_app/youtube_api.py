@@ -1,7 +1,8 @@
 # django_app/youtube_api.py
 import asyncio
+import time
 from googleapiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
+from youtube_transcript_api import YouTubeTranscriptApi, CouldNotRetrieveTranscript
 import cohere
 from django.conf import settings
 
@@ -110,21 +111,36 @@ async def get_transcript_summary(video_id):
         text = " ".join([chunk.get("text") for chunk in transcript]).replace("\n", " ")
 
         if len(text) < 250:
-            return None
-
-        co = cohere.Client(settings.COHERE_API_KEY)
-    
-        # summarize transcript using Cohere
-        response = co.summarize(
-            text=text
-        )
-
-        print(response.summary)
-
-        return response.summary
-    except Exception:
+            return text
+    except CouldNotRetrieveTranscript:
         print("No transcript available.")
         return ""
+
+    keys = [settings.COHERE_API_KEY,
+            settings.COHERE_API_KEY_1,
+            settings.COHERE_API_KEY_2,
+            settings.COHERE_API_KEY_3]
+    
+    for key in keys:
+        try:
+            # print(video_id, key)
+            co = cohere.Client(key)
+        
+            # summarize transcript using Cohere
+            response = co.summarize(
+                text=text,
+                length='short',
+                extractiveness='medium'
+            )
+
+            # print(response.summary)
+
+            return response.summary.replace("Here is your short summary", "")
+        except Exception as e:
+            pass
+
+    print("No summary available.")
+    return ""
 
 async def process_playlist_items(youtube_service, item):
     video_id = item.get("contentDetails").get("videoId")
